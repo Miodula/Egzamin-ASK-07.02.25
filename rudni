@@ -1,0 +1,175 @@
+<Window x:Class="GridData.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GridData"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+
+    <Window.Resources>
+        <Style TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch">
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Filtruj wedlug nazwy: " Grid.Column="0" Grid.Row="0" Margin="7" />
+        <TextBox Name="Filtr"  Grid.Column="1" Grid.Row="0" Margin="7" TextChanged="Filtr_TextChanged"/>
+
+        <ListView x:Name="LVLista" MouseDoubleClick="LVLista_MouseDoubleClick">
+            <ListView.View>
+                <GridView>
+                    <GridView.Columns>
+                        <GridViewColumn Header = "Index" DisplayMemberBinding="{Binding Index}"/>
+                        <GridViewColumn Header = "Nazwa" DisplayMemberBinding="{Binding Nazwa}"/>
+                        <GridViewColumn Header = "Ilosc">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Ilosc}" FontSize="13" Foreground="PaleVioletRed" FontWeight="Bold" Background="Aqua" TextAlignment="Right"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header = "Miasto" DisplayMemberBinding="{Binding Miasto}"/>
+                    </GridView.Columns>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        
+    </Grid>
+</Window>
+
+
+
+=============================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+
+namespace GridData
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        private ObservableCollection<Dane> dane = null;
+        public MainWindow()
+        {
+            InitializeComponent();
+            Wiazanie();
+        }
+        private void Wiazanie()
+        {
+            dane = new ObservableCollection<Dane>();
+            dane.Add(new Dane("x1", "Okno", 1, "Płock"));
+            dane.Add(new Dane("x2", "Drzwi", 2, "Baboszyce"));
+            dane.Add(new Dane("x3", "Stół", 5, "Wędzidoły"));
+            dane.Add(new Dane("x4", "Komputer", 3, "Bociany Małe"));
+            dane.Add(new Dane("x5", "Telefon", 8, "Wisijaja Stare"));
+            LVLista.ItemsSource = dane;
+
+            CollectionView CV = (CollectionView)CollectionViewSource.GetDefaultView(LVLista.ItemsSource);
+            CV.SortDescriptions.Add(new SortDescription("Miasto", ListSortDirection.Ascending));
+            CV.SortDescriptions.Add(new SortDescription("Nazwa", ListSortDirection.Ascending));
+
+            CV.Filter = Filtrowanie;
+
+        }
+
+        private bool Filtrowanie(object item)
+        {
+            if (string.IsNullOrEmpty(Filtr.Text))
+                return true;
+            else
+                return ((item as Dane).Nazwa.IndexOf(Filtr.Text, StringComparison.OrdinalIgnoreCase) >= 0);
+        }
+
+        private void Filtr_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            CollectionViewSource.GetDefaultView(LVLista.ItemsSource).Refresh();
+        }
+
+        private void LVLista_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            Window1 w1 = new Window1(this);
+            w1.Show()
+        }
+    }
+}
+=======================================================================================
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Collections.ObjectModel;
+
+namespace GridData
+{
+    internal class Dane
+    {
+        public string Index { get; set; }
+        public string Nazwa {  get; set; }
+        public int Ilosc { get; set; }
+
+        public string Miasto { get; set; }
+
+        public Dane(string Index, string Nazwa, int Ilosc, string Miasto)
+        {
+            this.Index = Index;
+            this.Nazwa = Nazwa;
+            this.Ilosc = Ilosc;
+            this.Miasto = Miasto;
+        }
+        public override string ToString()
+        {
+            return String.Format("{0} {1} {2} {3}", Index, Nazwa, Ilosc, Miasto);
+        }
+    }
+}
+====================================================================
+<Window x:Class="GridData.Window1"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GridData"
+        mc:Ignorable="d"
+        Title="Edycja" Height="250" Width="350">
+    <Grid Name="GEdycja">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="index" />
+        <TextBox Grid.Row="0" Grid.Column="1"/>
+    </Grid>
+</Window>
